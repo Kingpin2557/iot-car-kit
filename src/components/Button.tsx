@@ -1,12 +1,11 @@
 type Button = {
     text: string,
     icon: string,
-    onClick: () => void
 }
 
-function Button({text, icon = "gear", onClick} :Button) {
+function Button({text, icon = "gear"} :Button) {
     return (
-        <button onClick={onClick}>
+        <button onClick={() => {console.log('clicked')}}>
             {text}
             <i className={`bi bi-${icon}`}></i>
         </button>

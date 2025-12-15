@@ -1,8 +1,8 @@
-import type {JSX} from "react";
+import type {ReactNode} from "react";
 
 type Section = {
     title: string,
-    children: JSX.Element
+    children: ReactNode
 }
 
 function SensorType({title, children}:Section) {
