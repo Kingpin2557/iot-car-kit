@@ -2,9 +2,15 @@ import {useState} from "react";
 import {Modal} from "react-bootstrap";
 import * as React from "react";
 
+type UserConfig = {
+    name: string;
+    type: string;
+}
+
 type Sensor = {
     id: number;
     data: Array<number>;
+    userConfig: UserConfig | null;
 }
 
 type Button = {
@@ -65,7 +71,7 @@ function Button({sensor, icon = "gear", isNewSensor} :Button) {
     return (
         <>
             <button onClick={handleClick}>
-                {sensor?.id}
+                {sensor?.userConfig?.name || sensor?.id}
                 <i className={`bi bi-${icon}`}></i>
             </button>
 

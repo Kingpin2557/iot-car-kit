@@ -5,29 +5,30 @@ import SensorType from "./components/SensorType.tsx";
 import {Col, Container, Row} from "react-bootstrap";
 import {useEffect, useState} from "react";
 
+type UserConfig = {
+    name: string;
+    type: string;
+}
+
 type Sensor = {
     id: number;
     data: Array<number>;
-    userConfig?: {
-        name: string,
-        type: string
-    }
+    userConfig: UserConfig | null;
 }
 
 type SensorContainer = {
     sensors: Sensor[];
 }
 
- async function fetchData(url:string): Promise<SensorContainer> {
-     const res = await fetch(url);
+async function fetchData(url: string): Promise<SensorContainer> {
+    const res = await fetch(url);
 
-     if (!res.ok) {
-         throw new Error('Something went wrong!');
-     }
+    if (!res.ok) {
+        throw new Error('Something went wrong!');
+    }
 
-     return res.json();
- }
-
+    return res.json();
+}
 
 function App() {
     const [sensorData, setSensorData] = useState<SensorContainer>({sensors: []});
@@ -38,18 +39,16 @@ function App() {
         const loadData = async () => {
             try {
                 const data = await fetchData(`https://sensor-routes.vercel.app/sensors`);
-
                 setSensorData(data);
             } catch (err) {
-                setError(err);
+                setError(err as Error);
             } finally {
                 setIsLoading(false);
             }
         };
 
         loadData();
-    }, [])
-
+    }, []);
 
     if (isLoading) {
         return <div>Loading sensor data...</div>;
@@ -59,6 +58,11 @@ function App() {
         return <div>Error: {error.message}</div>;
     }
 
+    const unconfiguredSensors = sensorData.sensors.filter(sensor => {
+        const config = sensor.userConfig;
+
+        return !config || config.type === "" || config.name === "";
+    });
 
     const groupedSensors = sensorData.sensors.reduce((acc, sensor) => {
         const type = sensor.userConfig?.type || 'Unconfigured';
@@ -66,59 +70,55 @@ function App() {
         if (!acc[type]) {
             acc[type] = [];
         }
-
         acc[type].push(sensor);
-
         return acc;
     }, {} as Record<string, typeof sensorData.sensors>);
 
+    return (
+        <Container>
+            <nav className="navbar navbar-light bg-light">
+                <h1>IoT Kit</h1>
+            </nav>
+            <Row>
+                <Col lg={6}>
+                    {unconfiguredSensors.length > 0 && (
+                        <SensorType title="Incoming Sensors">
+                            {unconfiguredSensors.map((sensor) => (
+                                <Button
+                                    key={sensor.id}
+                                    sensor={sensor}
+                                    icon={"gear"}
+                                    isNewSensor={true}
+                                />
+                            ))}
+                        </SensorType>
+                    )}
+                </Col>
+            </Row>
+            <Row>
+                <Col lg={6}>
+                    {Object.keys(groupedSensors).map((sensorType) => {
+                        if (sensorType === 'Unconfigured') return null;
 
-  return (
-      <Container>
-          <nav className="navbar navbar-light bg-light">
-              <h1>IoT Kit</h1>
-          </nav>
-          <Row>
-              <Col lg={6}>
-                  <SensorType title="Incomming Sensors">
-                      {sensorData.sensors.map((sensor) => {
-                          const isConfigured = !!sensor.userConfig;
-                          if (!isConfigured && !sensor.userConfig?.type && !sensor.userConfig?.name) {
-                              return (
-                                  <Button
-                                      key={sensor.id}
-                                      sensor={sensor}
-                                      icon={"gear"}
-                                      isNewSensor={!isConfigured}
-                                  />
-                              );
-                          }
-                      })}
-                  </SensorType>
-              </Col>
-          </Row>
-          <Row>
-              <Col lg={6}>
-                  {Object.keys(groupedSensors).map((sensorType) => {
-                      const sensorsInGroup = groupedSensors[sensorType];
+                        const sensorsInGroup = groupedSensors[sensorType];
 
-                      return (
-                          <SensorType key={sensorType} title={sensorType}>
-                              {sensorsInGroup.map((sensor) => (
-                                  <Button
-                                      key={sensor.id}
-                                      sensor={sensor}
-                                      icon="check-circle-fill"
-                                      isNewSensor={false}
-                                  />
-                              ))}
-                          </SensorType>
-                      );
-                  })}
-              </Col>
-          </Row>
-      </Container>
-  )
+                        return (
+                            <SensorType key={sensorType} title={sensorType}>
+                                {sensorsInGroup.map((sensor) => (
+                                    <Button
+                                        key={sensor.id}
+                                        sensor={sensor}
+                                        icon="check-circle-fill"
+                                        isNewSensor={false}
+                                    />
+                                ))}
+                            </SensorType>
+                        );
+                    })}
+                </Col>
+            </Row>
+        </Container>
+    );
 }
 
-export default App
+export default App;
