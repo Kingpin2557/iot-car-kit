@@ -1,4 +1,4 @@
-import type {ReactNode} from "react";
+import {Children, type ReactNode} from "react";
 
 type Section = {
     title: string,
@@ -6,10 +6,13 @@ type Section = {
 }
 
 function SensorType({title, children}:Section) {
+
+    if (Children.toArray(children).length === 0) return null
+
     return (
         <section>
             <h2>{title}</h2>
-            <div>
+            <div className="c-type">
                 {children}
             </div>
         </section>

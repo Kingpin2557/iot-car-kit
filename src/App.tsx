@@ -8,6 +8,10 @@ import {useEffect, useState} from "react";
 type Sensor = {
     id: number;
     data: Array<number>;
+    userConfig?: {
+        name: string,
+        type: string
+    }
 }
 
 type SensorContainer = {
@@ -33,9 +37,7 @@ function App() {
     useEffect(() => {
         const loadData = async () => {
             try {
-                const url = `https://sensor-routes.vercel.app/sensors`;
-
-                const data = await fetchData(url);
+                const data = await fetchData(`https://sensor-routes.vercel.app/sensors`);
 
                 setSensorData(data);
             } catch (err) {
@@ -58,38 +60,65 @@ function App() {
     }
 
 
-    const processedIds = new Set<Sensor | number>();
+    const groupedSensors = sensorData.sensors.reduce((acc, sensor) => {
+        const type = sensor.userConfig?.type || 'Unconfigured';
 
-    sensorData.sensors.forEach(sensor => {
-        if (!processedIds.has(sensor.id)) {
-            processedIds.add(sensor);
+        if (!acc[type]) {
+            acc[type] = [];
         }
-    });
 
-    console.log("Unique IDs found:", processedIds);
+        acc[type].push(sensor);
+
+        return acc;
+    }, {} as Record<string, typeof sensorData.sensors>);
+
 
   return (
       <Container>
           <nav className="navbar navbar-light bg-light">
               <h1>IoT Kit</h1>
           </nav>
-
-
           <Row>
               <Col lg={6}>
-                  <SensorType title="Sensor">
-                      <Button text="120" icon="gear" />
-                      <Button text="120" icon="gear" />
-
-                      <Button text="120" icon="gear" />
-                      <Button text="120" icon="gear" />
-                      <Button text="120" icon="gear" />
+                  <SensorType title="Incomming Sensors">
+                      {sensorData.sensors.map((sensor) => {
+                          const isConfigured = !!sensor.userConfig;
+                          if (!isConfigured && !sensor.userConfig?.type && !sensor.userConfig?.name) {
+                              return (
+                                  <Button
+                                      key={sensor.id}
+                                      sensor={sensor}
+                                      icon={"gear"}
+                                      isNewSensor={!isConfigured}
+                                  />
+                              );
+                          }
+                      })}
                   </SensorType>
+              </Col>
+          </Row>
+          <Row>
+              <Col lg={6}>
+                  {Object.keys(groupedSensors).map((sensorType) => {
+                      const sensorsInGroup = groupedSensors[sensorType];
+
+                      return (
+                          <SensorType key={sensorType} title={sensorType}>
+                              {sensorsInGroup.map((sensor) => (
+                                  <Button
+                                      key={sensor.id}
+                                      sensor={sensor}
+                                      icon="check-circle-fill"
+                                      isNewSensor={false}
+                                  />
+                              ))}
+                          </SensorType>
+                      );
+                  })}
               </Col>
           </Row>
       </Container>
   )
-
 }
 
 export default App
