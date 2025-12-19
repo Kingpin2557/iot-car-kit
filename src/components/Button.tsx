@@ -1,5 +1,5 @@
 import {useState} from "react";
-import {Modal} from "react-bootstrap";
+import {Form, Modal} from "react-bootstrap";
 import * as React from "react";
 
 type UserConfig = {
@@ -87,21 +87,24 @@ function Button({sensor, icon = "gear", isNewSensor} :Button) {
                     </Modal.Title>
                 </Modal.Header>
                 <Modal.Body>
-                    <form onSubmit={handleUpdateSensor}>
-                        <label>
-                            Component name:
-                            <input name="submitted-name" />
-                        </label>
+                    <Form onSubmit={handleUpdateSensor}>
+                        <Form.Group className="mb-3">
+                            <Form.Label>Component name:</Form.Label>
+                            <Form.Control name="submitted-name" placeholder="Enter component name" />
+                        </Form.Group>
 
-                        <label>
-                            Component type:
-                            <input name="submitted-type" />
-                        </label>
+                        <Form.Group className="mb-3">
+                            <Form.Label>Component type:</Form.Label>
+                            <Form.Select name="submitted-type" defaultValue="Component type">
+                                <option value="Sensor">Sensor</option>
+                                <option value="Actuator">Actuator</option>
+                            </Form.Select>
+                        </Form.Group>
 
-                        <button type={"submit"}>
-                            Update Component
+                        <button type="submit">
+                            Update settings
                         </button>
-                    </form>
+                    </Form>
                 </Modal.Body>
                 <Modal.Footer></Modal.Footer>
             </Modal>

@@ -2,6 +2,7 @@ import 'bootstrap-icons/font/bootstrap-icons.css';
 import './App.css'
 import Button from "./components/Button.tsx";
 import SensorType from "./components/SensorType.tsx";
+import SettingModal from './components/SettingModal.tsx';
 import {Col, Container, Row} from "react-bootstrap";
 import {useEffect, useState} from "react";
 
@@ -33,6 +34,7 @@ async function fetchData(url: string): Promise<SensorContainer> {
 function App() {
     const [sensorData, setSensorData] = useState<SensorContainer>({sensors: []});
     const [isLoading, setIsLoading] = useState(true);
+    const [showSettings, setShowSettings] = useState(false);
     const [error, setError] = useState<Error | null>(null);
 
     useEffect(() => {
@@ -48,7 +50,7 @@ function App() {
         };
 
         loadData();
-    }, []);
+    }, [sensorData]);
 
     if (isLoading) {
         return <div>Loading sensor data...</div>;
@@ -74,10 +76,17 @@ function App() {
         return acc;
     }, {} as Record<string, typeof sensorData.sensors>);
 
+    function handleSettings() {
+        setShowSettings(true);
+    }
+
     return (
         <Container>
             <nav className="navbar navbar-light bg-light">
                 <h1>IoT Kit</h1>
+                <button onClick={handleSettings}>
+                    <i className={`bi bi-gear`}></i>
+                </button>
             </nav>
             <Row>
                 <Col lg={6}>
@@ -117,6 +126,11 @@ function App() {
                     })}
                 </Col>
             </Row>
+
+            <SettingModal
+                show={showSettings}
+                onHide={() => setShowSettings(false)}
+            />
         </Container>
     );
 }
