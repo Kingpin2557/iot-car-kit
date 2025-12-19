@@ -1,5 +1,6 @@
-import {useState} from "react";
-import {Form, Modal} from "react-bootstrap";
+import { useState } from "react";
+import { Form, Modal } from "react-bootstrap";
+import { Link } from "react-router-dom"; // Logic: Import Link for routing
 import * as React from "react";
 
 type UserConfig = {
@@ -23,6 +24,19 @@ type Button = {
 function Button({sensor, icon = "gear", isNewSensor, onUpdate} :Button) {
     const [show, setShow] = useState(false);
 
+    const slugify = (text: string) => {
+        return text
+            .toString()
+            .toLowerCase()
+            .trim()
+            .replace(/\s+/g, '-')
+            .replace(/[^\w-]+/g, '')
+            .replace(/--+/g, '-');
+    };
+
+    const hasConfig = !!sensor?.userConfig?.name;
+    const configSlug = hasConfig ? slugify(sensor.userConfig!.name) : "";
+
     function handleClick() {
         if (isNewSensor) {
             setShow(true);
@@ -38,55 +52,49 @@ function Button({sensor, icon = "gear", isNewSensor, onUpdate} :Button) {
         const type = formData.get("submitted-type");
 
         const sensorId = sensor?.id;
-        if (!sensorId) {
-            console.error("Sensor ID is missing.");
-            return;
-        }
+        if (!sensorId) return;
 
         try {
             const response = await fetch(`https://sensor-routes.vercel.app/sensor/${sensorId}`, {
                 method: 'PATCH',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
+                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    userConfig: {
-                        name: name,
-                        type: type
-                    }
+                    userConfig: { name, type }
                 }),
             });
 
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
+            if (!response.ok) throw new Error(`Error: ${response.status}`);
 
             setShow(false);
             onUpdate();
-            console.info('Sensor updated successfully!');
-
         } catch (error) {
             console.error("Failed to update sensor:", error);
         }
     }
 
+    const content = (
+        <>
+            {sensor?.userConfig?.name || sensor?.id}
+            <i className={`bi bi-${icon}`}></i>
+        </>
+    );
+
     return (
         <>
-            <button onClick={handleClick}>
-                {sensor?.userConfig?.name || sensor?.id}
-                <i className={`bi bi-${icon}`}></i>
-            </button>
 
-            <Modal
-                show={show}
-                onHide={() => setShow(false)}
-                dialogClassName="modal-90w"
-                aria-labelledby="example-custom-modal-styling-title"
-            >
+            {hasConfig && !isNewSensor ? (
+                <Link to={`/${configSlug}`}>
+                    {content}
+                </Link>
+            ) : (
+                <button onClick={handleClick}>
+                    {content}
+                </button>
+            )}
+
+            <Modal show={show} onHide={() => setShow(false)}>
                 <Modal.Header closeButton>
-                    <Modal.Title id="example-custom-modal-styling-title">
-                        {sensor?.id}
-                    </Modal.Title>
+                    <Modal.Title>{sensor?.id}</Modal.Title>
                 </Modal.Header>
                 <Modal.Body>
                     <Form onSubmit={handleUpdateSensor}>
@@ -103,12 +111,24 @@ function Button({sensor, icon = "gear", isNewSensor, onUpdate} :Button) {
                             </Form.Select>
                         </Form.Group>
 
+                        <Form.Group className="mb-3">
+                            <Form.Label>Component data: </Form.Label>
+                            {sensor.data?.map((item, i) => (
+                                <div key={i} className="c-ui">
+                                    <p>{String(item)}</p>
+                                    <Form.Select name="submitted-ui" defaultValue="Component ui">
+                                        <option value="button">Button</option>
+                                        <option value="graph">Graph</option>
+                                    </Form.Select>
+                                </div>
+                            ))}
+                        </Form.Group>
+
                         <button type="submit">
                             Update settings
                         </button>
                     </Form>
                 </Modal.Body>
-                <Modal.Footer></Modal.Footer>
             </Modal>
         </>
     );
