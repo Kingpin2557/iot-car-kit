@@ -37,20 +37,21 @@ function App() {
     const [showSettings, setShowSettings] = useState(false);
     const [error, setError] = useState<Error | null>(null);
 
-    useEffect(() => {
-        const loadData = async () => {
-            try {
-                const data = await fetchData(`https://sensor-routes.vercel.app/sensors`);
-                setSensorData(data);
-            } catch (err) {
-                setError(err as Error);
-            } finally {
-                setIsLoading(false);
-            }
-        };
+    const loadData = async () => {
+        try {
+            const data = await fetchData(`https://sensor-routes.vercel.app/sensors`);
+            setSensorData(data);
+        } catch (err) {
+            setError(err as Error);
+        } finally {
+            setIsLoading(false);
+        }
+    };
 
+
+    useEffect(() => {
         loadData();
-    }, [sensorData]);
+    }, []);
 
     if (isLoading) {
         return <div>Loading sensor data...</div>;
@@ -98,6 +99,7 @@ function App() {
                                     sensor={sensor}
                                     icon={"gear"}
                                     isNewSensor={true}
+                                    onUpdate={loadData}
                                 />
                             ))}
                         </SensorType>
@@ -119,6 +121,7 @@ function App() {
                                         sensor={sensor}
                                         icon="check-circle-fill"
                                         isNewSensor={false}
+                                        onUpdate={loadData}
                                     />
                                 ))}
                             </SensorType>

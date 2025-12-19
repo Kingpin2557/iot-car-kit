@@ -16,10 +16,11 @@ type Sensor = {
 type Button = {
     sensor: Sensor,
     icon: string,
-    isNewSensor: boolean
+    isNewSensor: boolean,
+    onUpdate: () => void
 }
 
-function Button({sensor, icon = "gear", isNewSensor} :Button) {
+function Button({sensor, icon = "gear", isNewSensor, onUpdate} :Button) {
     const [show, setShow] = useState(false);
 
     function handleClick() {
@@ -61,6 +62,7 @@ function Button({sensor, icon = "gear", isNewSensor} :Button) {
             }
 
             setShow(false);
+            onUpdate();
             console.info('Sensor updated successfully!');
 
         } catch (error) {
